@@ -1,55 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.example</groupId>
-  <artifactId>app</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>sysdesignola3</artifactId>
+  <version>1.0.0</version>
+  <name>SysDesignOLA3</name>
 
   <properties>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Quality gates -->
+    <jacoco.instruction.minimum>0.80</jacoco.instruction.minimum>
+    <jacoco.branch.minimum>0.70</jacoco.branch.minimum>
   </properties>
 
   <dependencies>
+    <!-- JUnit 5 -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.11.3</version>
+      <version>5.10.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>3.4.2</version>
+
+      <!-- Enforce Java/Maven sanity -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals><goal>enforce</goal></goals>
             <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>com.example.App</mainClass>
-                    </manifest>
-                </archive>
+              <rules>
+                <requireJavaVersion>
+                  <version>[21,)</version>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>[3.8.1,)</version>
+                </requireMavenVersion>
+              </rules>
             </configuration>
-        </plugin>
-      <!-- JaCoCo -->
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Unit tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <useModulePath>false</useModulePath>
+        </configuration>
+      </plugin>
+
+      <!-- JaCoCo coverage + minimum thresholds -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.11</version>
+        <version>0.8.12</version>
         <executions>
           <execution>
+            <id>prepare-agent</id>
             <goals><goal>prepare-agent</goal></goals>
           </execution>
+
           <execution>
             <id>report</id>
             <phase>verify</phase>
             <goals><goal>report</goal></goals>
+          </execution>
+
+          <execution>
+            <id>check</id>
+            <phase>verify</phase>
+            <goals><goal>check</goal></goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.instruction.minimum}</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.branch.minimum}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -60,21 +115,22 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
         <version>3.3.1</version>
         <dependencies>
+          <!-- Pin Checkstyle to a version that supports allowMissingThrowsTags -->
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>9.3</version>
+            <version>10.17.0</version>
           </dependency>
         </dependencies>
         <configuration>
           <configLocation>config/checkstyle/checkstyle.xml</configLocation>
           <consoleOutput>true</consoleOutput>
-          <failOnViolation>false</failOnViolation>
+          <failsOnError>true</failsOnError>
           <linkXRef>false</linkXRef>
         </configuration>
         <executions>
           <execution>
-            <id>checkstyle-verify</id>
+            <id>checkstyle</id>
             <phase>verify</phase>
             <goals><goal>check</goal></goals>
           </execution>
@@ -85,39 +141,57 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.8.6.2</version>
+        <version>4.8.6.6</version>
         <configuration>
           <effort>Max</effort>
-          <threshold>Medium</threshold>
-          <failOnError>false</failOnError>
+          <threshold>Low</threshold>
+          <failOnError>true</failOnError>
           <xmlOutput>true</xmlOutput>
         </configuration>
         <executions>
           <execution>
+            <id>spotbugs</id>
             <phase>verify</phase>
             <goals><goal>check</goal></goals>
           </execution>
         </executions>
       </plugin>
 
-      <!-- CycloneDX -->
+      <!-- SBOM (CycloneDX) -->
       <plugin>
         <groupId>org.cyclonedx</groupId>
         <artifactId>cyclonedx-maven-plugin</artifactId>
         <version>2.8.0</version>
         <executions>
           <execution>
+            <id>make-sbom</id>
             <phase>verify</phase>
             <goals><goal>makeAggregateBom</goal></goals>
             <configuration>
-              <schemaVersion>1.5</schemaVersion>
               <outputFormat>json</outputFormat>
               <outputName>bom</outputName>
+              <outputDirectory>${project.build.directory}</outputDirectory>
               <includeBomSerialNumber>true</includeBomSerialNumber>
             </configuration>
           </execution>
         </executions>
       </plugin>
+
+      <!-- Jar packaging with Main-Class -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.example.sysdesignola3.app.App</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
+
 </project>
