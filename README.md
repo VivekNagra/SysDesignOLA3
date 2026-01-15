@@ -47,12 +47,12 @@ The application is used mainly as a realistic target for:
 ```bash
 ./mvnw -B -ntp verify
 ````
-## Build JAR
+### Build JAR
 ```bash
 ./mvnw -B -ntp package
 ```
 
-## Run Locally 
+### Run Locally 
 ```bash
 java -jar target/sysdesignola3-1.0.0.jar
 ```
@@ -73,7 +73,7 @@ This keeps the final image smaller and avoids shipping Maven tooling in producti
 docker build -t sysdesignola3:local .
 ```
 
-## Run image
+### Run image
 ```bash
 docker run --rm sysdesignola3:local
 ```
@@ -100,6 +100,12 @@ Workflow file:
 
 --- 
 
+## Evidence links
+
+- Successful GitHub Actions run: https://github.com/VivekNagra/SysDesignOLA3/actions/runs/21043153132
+- GHCR packages (owner): https://github.com/VivekNagra?tab=packages
+
+---
 ## Quality gates
 
 The commit stage enforces the following quality gates:
