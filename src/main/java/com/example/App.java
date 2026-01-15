@@ -1,18 +1,36 @@
-package com.example;
+package com.example.sysdesignola3.app;
 
-import java.util.HashMap;
+import com.example.sysdesignola3.domain.BillingResult;
+import com.example.sysdesignola3.domain.Money;
+import com.example.sysdesignola3.domain.Plan;
+import com.example.sysdesignola3.domain.PricingService;
 
-public class App {
+/**
+ * Minimal CLI entry point (kept intentionally simple).
+ */
+public final class App {
+
+    private App() {
+    }
+
     public static void main(String[] args) {
-        System.out.println("Hello, Commit CI!");
-    }
+        PricingService pricing = new PricingService();
 
-    public int add(int a, int b) {
-        return a + b;
-    }
+        BillingResult result = pricing.quote(
+                Plan.PREMIUM,
+                3,
+                false,
+                "STUDENT10"
+        );
 
-    public boolean isYes(String str) {
-        return str == "yes!";  // BUG: use "yes".equals(s)
-    }
+        System.out.println("Plan: " + result.plan());
+        System.out.println("Subtotal: " + result.subtotal());
+        System.out.println("Discount: " + result.discount());
+        System.out.println("VAT: " + result.vat());
+        System.out.println("Total: " + result.total());
 
+        if (result.total().isLessThan(Money.ofDkk(0))) {
+            throw new IllegalStateException("Total cannot be negative");
+        }
+    }
 }
